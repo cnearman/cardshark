@@ -42,6 +42,30 @@ io.on("connection", (socket) => {
         socket.channels[channel] = channel;
     });
 
+    socket.on('trxICECandidate', (config) => {
+        var peer_socket_id = config.peer_socket_id;
+        var ice_candidate = config.ice_candidate;
+
+        if(!(peer_socket_id in sockets)){
+            console.log(`ERROR: Attempted to relay ICE candidate to non-existant socket. SocketID ${peer_socket_id}`);
+            return;
+        }
+
+        sockets[peer_socket_id].emit('iceCandidate', {'peer_socket_id': peer_socket_id, 'ice_candidate': ice_candidate});
+    });
+
+    socket.on('relaySessionDescription', (config) => {
+        var peer_socket_id = config.peer_socket_id;
+        var session_description = config.session_description;
+
+        if(!(peer_socket_id in sockets)){
+            console.log(`ERROR: Attempted to relay session description to non-existant socket. SocketID ${peer_socket_id}`);
+            return;
+        }
+
+        sockets[peer_socket_id].emit('sessionDescription', {'peer_socket_id': socket.id, 'session_description': session_description});
+    });
+
     socket.on('disconnect', function (){
         console.log(`Client disconnected. Socket Id: ${socket.id}`)
     });
