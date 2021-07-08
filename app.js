@@ -22,6 +22,7 @@ io.on("connection", (socket) => {
     sockets[socket.id] = socket;
 
     socket.on('join_channel', (config) => {
+        console.log(`Received. Join Channel`);
         var channel = config.channel;
 
         if (channel in socket.channels){
@@ -34,6 +35,7 @@ io.on("connection", (socket) => {
         }
 
         for (id in channels[channel]){
+            console.log(`Sending begin_peer_connection - ${id} to ${socket.id} `);
             channels[channel][id].emit('begin_peer_connection', {'peer_socket_id': socket.id, 'should_create_offer' : false});
             socket.emit('begin_peer_connection', {'peer_socket_id':id, 'should_create_offer' : true});
         }
@@ -43,6 +45,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on('trxICECandidate', (config) => {
+        console.log(`Received - Transfer ICE Candidate `)
         var peer_socket_id = config.peer_socket_id;
         var ice_candidate = config.ice_candidate;
 
@@ -50,8 +53,9 @@ io.on("connection", (socket) => {
             console.log(`ERROR: Attempted to relay ICE candidate to non-existant socket. SocketID ${peer_socket_id}`);
             return;
         }
-
-        sockets[peer_socket_id].emit('iceCandidate', {'peer_socket_id': peer_socket_id, 'ice_candidate': ice_candidate});
+        
+        console.log(`Sending ICE Candidate to ${peer_socket_id}`)
+        sockets[peer_socket_id].emit('iceCandidate', {'peer_socket_id': socket.id, 'ice_candidate': ice_candidate});
     });
 
     socket.on('relaySessionDescription', (config) => {
@@ -63,6 +67,7 @@ io.on("connection", (socket) => {
             return;
         }
 
+        console.log(`Sending Session Description to ${peer_socket_id}`)
         sockets[peer_socket_id].emit('sessionDescription', {'peer_socket_id': socket.id, 'session_description': session_description});
     });
 
