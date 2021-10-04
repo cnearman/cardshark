@@ -71,8 +71,21 @@ io.on("connection", (socket) => {
         sockets[peer_socket_id].emit('sessionDescription', {'peer_socket_id': socket.id, 'session_description': session_description});
     });
 
-    socket.on('disconnect', function (){
-        console.log(`Client disconnected. Socket Id: ${socket.id}`)
+    socket.on('disconnect', function () {
+        console.log(`Client disconnected. Socket Id: ${socket.id}`);
+        for (var channel in socket.channels) {
+
+            delete socket.channels[channel];
+            delete channels[channel][socket.id];
+
+            for (id in channels[channel]){
+                console.log(`Emitting removePeer message to ${id}`);
+                channels[channel][id].emit('removePeer', { 'peer_id' : socket.id});
+                socket.emit('removePeer', {'peer_id': id});
+            }
+        }
+
+        delete sockets[socket.id];
     });
 })
 
