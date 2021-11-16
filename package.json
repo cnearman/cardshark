@@ -10,8 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "ffmpeg": "^0.0.4",
-    "socket.io": "^4.1.2"
+    "socket.io": "^4.1.2",
+    "twilio": "^3.71.1"
   }
 }

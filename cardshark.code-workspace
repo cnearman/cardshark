@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "..\\cardshark-react"
+		},
+		{
+			"path": "..\\cardshark-signaling-server"
 		}
 	],
 	"settings": {}

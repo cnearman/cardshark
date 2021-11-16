@@ -1,11 +1,22 @@
 const express = require("express");
+const cors = require('cors');
 const http = require('http');
 const socketIo = require("socket.io");
 
 const index = require("./routes/index");
 const port = process.env.PORT || 8081;
 
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = require('twilio')(accountSid, authToken);
+
 var app = express();
+
+app.use(cors());
+
+app.get('/turn', function (req, res, next) {
+    client.tokens.create().then(token => res.send(token)).catch(e => res.send('bad'));
+});
 
 app.use('/', index);
 
@@ -33,6 +44,8 @@ io.on("connection", (socket) => {
         if (!(channel in channels)){
             channels[channel] = {};
         }
+        
+        // TODO: Setup Metadata for user.
 
         for (id in channels[channel]){
             console.log(`Sending begin_peer_connection - ${id} to ${socket.id} `);
