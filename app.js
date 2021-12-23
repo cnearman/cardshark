@@ -1,22 +1,11 @@
 const express = require("express");
-const cors = require('cors');
 const http = require('http');
 const socketIo = require("socket.io");
 
 const index = require("./routes/index");
-const port = process.env.PORT || 8081;
-
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = require('twilio')(accountSid, authToken);
+const port = process.env.PORT || 8082;
 
 var app = express();
-
-app.use(cors());
-
-app.get('/turn', function (req, res, next) {
-    client.tokens.create().then(token => res.send(token)).catch(e => res.send('bad'));
-});
 
 app.use('/', index);
 
@@ -25,12 +14,25 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 var sockets = {};
-var channels = {};
+var sessions = {};
 
 io.on("connection", (socket) => {
-    socket.channels = {};
-    console.log(`Client connected. Socket Id: ${socket.id}`);
     sockets[socket.id] = socket;
+
+    socket.on('new_session', () => {
+        console.log('new session');
+        if(socket.session){
+            return;
+        }
+
+        var sessionId = makeid(10);
+        socket.session = sessionId;
+        console.log(`session ID : ${sessionId}`)
+        sessions[sessionId] = {
+            players : [{name: 'player_1'}]
+        }
+        socket.emit('join_session', {'session_id': sessionId});
+    });
 
     socket.on('join_channel', (config) => {
         console.log(`Received. Join Channel`);
@@ -57,33 +59,6 @@ io.on("connection", (socket) => {
         socket.channels[channel] = channel;
     });
 
-    socket.on('trxICECandidate', (config) => {
-        console.log(`Received - Transfer ICE Candidate `)
-        var peer_socket_id = config.peer_socket_id;
-        var ice_candidate = config.ice_candidate;
-
-        if(!(peer_socket_id in sockets)){
-            console.log(`ERROR: Attempted to relay ICE candidate to non-existant socket. SocketID ${peer_socket_id}`);
-            return;
-        }
-        
-        console.log(`Sending ICE Candidate to ${peer_socket_id}`)
-        sockets[peer_socket_id].emit('iceCandidate', {'peer_socket_id': socket.id, 'ice_candidate': ice_candidate});
-    });
-
-    socket.on('relaySessionDescription', (config) => {
-        var peer_socket_id = config.peer_socket_id;
-        var session_description = config.session_description;
-
-        if(!(peer_socket_id in sockets)){
-            console.log(`ERROR: Attempted to relay session description to non-existant socket. SocketID ${peer_socket_id}`);
-            return;
-        }
-
-        console.log(`Sending Session Description to ${peer_socket_id}`)
-        sockets[peer_socket_id].emit('sessionDescription', {'peer_socket_id': socket.id, 'session_description': session_description});
-    });
-
     socket.on('disconnect', function () {
         console.log(`Client disconnected. Socket Id: ${socket.id}`);
         for (var channel in socket.channels) {
@@ -100,6 +75,17 @@ io.on("connection", (socket) => {
 
         delete sockets[socket.id];
     });
+
+    function makeid(length) {
+        var result           = '';
+        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for ( var i = 0; i < length; i++ ) {
+          result += characters.charAt(Math.floor(Math.random() * 
+     charactersLength));
+       }
+       return result;
+    }
 })
 
 server.listen(port, () => console.log(`Express App running on port ${port}`));
