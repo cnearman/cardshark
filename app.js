@@ -1,17 +1,17 @@
-const express = require("express");
-const http = require('http');
-const socketIo = require("socket.io");
+import express from "express";
+import HTTPServer from "http";
+import { Server } from "socket.io";
 
-const index = require("./routes/index");
+import Routes from "./src/routes/index.js";
+
 const port = process.env.PORT || 8082;
 
 var app = express();
 
-app.use('/', index);
+app.use('/', Routes);
 
-const server = http.createServer(app);
-
-const io = socketIo(server);
+const server = HTTPServer.createServer(app);
+const io = new Server(server);
 
 var sockets = {};
 var sessions = {};

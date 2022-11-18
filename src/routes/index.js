@@ -1,4 +1,5 @@
-module.exports = function(req, res) {
+
+export default function Routes(req, res) {
     console.log(`Request received to index at ${new Date().toLocaleTimeString()}`)
     res.status(200).send("Index")
 }
