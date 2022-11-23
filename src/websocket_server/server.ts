@@ -1,11 +1,14 @@
 import { Server } from "socket.io"
+import { ILogger } from "../logger/logger";
 
 class WebsocketServer {
     socketServer: Server;
+    logger: ILogger;
     eventHandlers?: Array<WebsocketServerEventHandler>;
 
-    constructor(socketServer:Server ) {
+    constructor(socketServer:Server, logger: ILogger ) {
         this.socketServer = socketServer;
+        this.logger = logger;
     }
 
     init(eventHandlers: Array<WebsocketServerEventHandler>) {
@@ -15,9 +18,9 @@ class WebsocketServer {
         }
 
         this.socketServer.on("connection", (socket) => {
-            console.log(`Client connected`);
+            this.logger.info("Client connected.");
             this.eventHandlers?.forEach ((handler) => {
-                console.log(`Bound Event Handler for ${handler.eventName}`);
+                this.logger.info(`Bound Event Handler for ${handler.eventName}`);
                 socket.on(handler.eventName, handler.handler);
             });
         });

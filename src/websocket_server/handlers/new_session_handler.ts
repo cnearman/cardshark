@@ -1,3 +1,4 @@
+import { ILogger } from "../../logger/logger";
 import { ISessionService } from "../../session_service/session_service";
 import { WebsocketServer, WebsocketServerEvent, WebsocketServerEventHandler } from "../server";
 
@@ -5,16 +6,18 @@ class NewSessionHandler implements WebsocketServerEventHandler {
 
     sessionService: ISessionService;
     websocketServer: WebsocketServer;
+    logger: ILogger;
 
-    constructor(sessionService: ISessionService, websocketServer: WebsocketServer) {
+    constructor(sessionService: ISessionService, websocketServer: WebsocketServer, logger: ILogger) {
         this.sessionService = sessionService;
         this.websocketServer = websocketServer;
+        this.logger = logger;
     }
 
     eventName: string = "new_session";
     handler: (...args: any[]) => void = async () => {
-        // If already part of a session, don't join.
         if (this.sessionService.getCurrentSession().isValid()) {
+            this.logger.warn('Attempted to create new session, but session already exists.')
             return;
         }
 

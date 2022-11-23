@@ -11,7 +11,7 @@ class SessionService implements ISessionService {
     createNewSession: () => Promise<Session> = async () => {
         var sessionId = this.makeSessionId(this.sessionIdLength);
         await this.redisClient.connect();
-        await this.redisClient.set(sessionId, '$', {"players" : [{"name": "chris"}]});
+        await this.redisClient.json.set(sessionId, '$', {"players" : [{"name": "chris"}]});
         await this.redisClient.disconnect();
         return new Session(sessionId);
     }
