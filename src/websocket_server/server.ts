@@ -1,4 +1,4 @@
-import { Server } from "socket.io"
+import { Server, Socket } from "socket.io"
 import { ILogger } from "../logger/logger";
 
 class WebsocketServer {
@@ -21,7 +21,9 @@ class WebsocketServer {
             this.logger.info("Client connected.");
             this.eventHandlers?.forEach ((handler) => {
                 this.logger.info(`Bound Event Handler for ${handler.eventName}`);
-                socket.on(handler.eventName, handler.handler);
+                const handlerInstance = handler.getInstance(); // TODO: Find another way to resolve this socket reference
+                handlerInstance.setSocket(socket);
+                socket.on(handlerInstance.eventName, handlerInstance.handler);
             });
         });
     }
@@ -34,6 +36,9 @@ class WebsocketServer {
 interface WebsocketServerEventHandler {
     eventName : string;
     handler: (...args: any[]) => void;
+    getInstance: () => WebsocketServerEventHandler;
+    setSocket: (socket:Socket) => void;
+    getSocket: () => Socket | undefined;
 }
 
 class WebsocketServerEvent {
