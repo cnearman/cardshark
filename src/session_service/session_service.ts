@@ -10,10 +10,20 @@ class SessionService implements ISessionService {
 
     createNewSession: () => Promise<Session> = async () => {
         var sessionId = this.makeSessionId(this.sessionIdLength);
-        await this.redisClient.connect();
         await this.redisClient.json.set(sessionId, '$', {"players" : [{"name": "chris"}]});
-        await this.redisClient.disconnect();
         return new Session(sessionId);
+    }
+
+    getSessionByUserId: (userId: string) => Promise<Session> = async (userId) => {
+        var sessionId = await this.redisClient().get(`${userId}:currentSession`);
+        var sessionData = await this.redisClient().json.get(sessionId, '$');
+        return new Session(sessionId); 
+    }
+    // TODO: Complete get session
+    // TODO: update logic for joining a session
+
+    joinSession: (sessionId: string, name: string) => Promise<void> = async (sessionId, name) => {
+        await this.redisClient.json.get()
     }
 
     getCurrentSession: () => Session = () => {
@@ -34,6 +44,7 @@ class SessionService implements ISessionService {
 interface ISessionService {
     createNewSession: () => Promise<Session>;
     getCurrentSession: () => Session;
+    joinSession: (sessionId: string, name: string) => Promise<void>;
 }
 
 class Session {
