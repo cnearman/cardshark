@@ -17,6 +17,19 @@ app.use('/', Routes);
 
 const redisClient: any = redis.createClient({url: 'redis://localhost:6379'});
 
+redisClient.connect();
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
+
+// TODO: resolve error thrown here.
+function cleanup() {
+  redisClient.quit(function() {
+      console.log('Redis client stopped.');
+  });
+};
+
 const coreLogger = winston.createLogger({
     transports: [
       new winston.transports.Console()
