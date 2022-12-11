@@ -9,24 +9,24 @@ import Routes from "./src/routes";
 import winston from "winston";
 import { WinstonLogger } from "./src/logger/logger";
 
+import * as jwt from 'socketio-jwt-auth';
+
 
 const port: number = Number(process.env.PORT) || 8082;
 
 const app: any = express();
 app.use('/', Routes);
 
-const redisClient: any = redis.createClient({url: 'redis://localhost:6379'});
+const redisClient: redis.RedisClientType = redis.createClient({url: 'redis://localhost:6379'});
 
 redisClient.connect();
 
 process.on('SIGINT', cleanup);
-process.on('SIGTERM', cleanup);
-
 
 // TODO: resolve error thrown here.
 function cleanup() {
-  redisClient.quit(function() {
-      console.log('Redis client stopped.');
+  redisClient.QUIT().then(() => {
+    console.log('Redis client stopped.');
   });
 };
 
@@ -40,6 +40,13 @@ const logger = new WinstonLogger(coreLogger);
 
 const httpServer: any =  HTTPServer.createServer(app);
 const ioServer: Server = new Server(httpServer);
+
+/*ioServer.use(jwt.authenticate({
+  secret: 'lpn__3d-dfzoDaZHadU37p4Dgvjp7xi_xTwegbtBKYZPBLA2Tb4l5vrExOw1HYec',
+  algorithm: 'HS256'
+}, function(payload, done){
+  done(null, payload);
+}))*/
 
 const sessionService: SessionService = new SessionService(redisClient);
 

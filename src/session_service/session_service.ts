@@ -1,33 +1,40 @@
+import { RedisClientType } from "redis";
+
 class SessionService implements ISessionService {
     sessionIdLength: number = 10;
     currentSession?: Session;
 
-    redisClient: any;
+    redisClient: RedisClientType;
 
-    constructor(redisClient: any) {
+    constructor(redisClient: RedisClientType) {
         this.redisClient = redisClient;
     }
 
     createNewSession: () => Promise<Session> = async () => {
         var sessionId = this.makeSessionId(this.sessionIdLength);
         await this.redisClient.json.set(sessionId, '$', {"players" : [{"name": "chris"}]});
-        return new Session(sessionId);
+        return new Session({id: sessionId});
     }
 
     getSessionByUserId: (userId: string) => Promise<Session> = async (userId) => {
-        var sessionId = await this.redisClient().get(`${userId}:currentSession`);
-        var sessionData = await this.redisClient().json.get(sessionId, '$');
-        return new Session(sessionId); 
+        var sessionId = await this.redisClient.get(`${userId}:currentSession`);
+        if (!sessionId) {
+            return new Session({});
+        }
+        let id = sessionId!;
+        let sessionData: any = await this.redisClient.json.get(id, {path: '$'});
+        return new Session({id: sessionId, ...sessionData}); 
     }
     // TODO: Complete get session
     // TODO: update logic for joining a session
 
-    joinSession: (sessionId: string, name: string) => Promise<void> = async (sessionId, name) => {
-        await this.redisClient.json.get()
+    joinSession: (sessionId: string, name: string, userId: string) => Promise<void> = async (sessionId, name, userId) => {
+        await this.redisClient.multi()
+            .set(`${userId}:currentSession`, sessionId);
     }
 
     getCurrentSession: () => Session = () => {
-        return this.currentSession || new Session(Session.default_id);
+        return this.currentSession || new Session({});
     }
 
     makeSessionId:(length: number) => string = (length) => {
@@ -44,15 +51,30 @@ class SessionService implements ISessionService {
 interface ISessionService {
     createNewSession: () => Promise<Session>;
     getCurrentSession: () => Session;
-    joinSession: (sessionId: string, name: string) => Promise<void>;
+    joinSession: (sessionId: string, name: string, userId: string) => Promise<void>;
+}
+
+interface SessionParams {
+    id?: string;
+    players? : PlayerSessionData[]
+}
+
+interface PlayerSessionData {
+    name?: string;
 }
 
 class Session {
     static default_id: string = "DEFAULT_ID";
     id: string;
+    players: PlayerSessionData[];
 
-    constructor(id: string) {
+    constructor(params: SessionParams) {
+        let { 
+            id = Session.default_id,
+            players = [] 
+        } = params;
         this.id = id;
+        this.players = players;
     }
 
     isValid() {

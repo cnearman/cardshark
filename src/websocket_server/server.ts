@@ -43,6 +43,9 @@ interface WebsocketServerEventHandler {
 
 class WebsocketServerEvent {
     static NewSession: WebsocketServerEvent = new WebsocketServerEvent("new_session");
+    static Navigate: WebsocketServerEvent = new WebsocketServerEvent("navigate");
+    static JoinSession: WebsocketServerEvent = new WebsocketServerEvent("join_session");
+    static UpdateState: WebsocketServerEvent = new WebsocketServerEvent("update_state");
 
     eventName: string;
 
