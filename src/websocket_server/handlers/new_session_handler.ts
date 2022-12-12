@@ -42,7 +42,7 @@ class NewSessionHandler implements WebsocketServerEventHandler {
         this.logger.info(`Received new_session event from socket ${this.getSocket()?.id}`);
         var newSession = await this.sessionService.createNewSession();
 
-        this.websocketServer.emit(WebsocketServerEvent.Navigate, { 'path': `/chat/${newSession.id}`});
+        this.getSocket()?.emit(WebsocketServerEvent.Navigate.eventName, { 'path': `/chat/${newSession.id}`});
     };
 }
 

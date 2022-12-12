@@ -35,10 +35,10 @@ class JoinSessionHandler implements WebsocketServerEventHandler {
         }
         
         this.logger.info(`Received join_session event from socket ${this.getSocket()?.id}`, args);
-        await this.sessionService.joinSession(args.sessionId, args.name, this.getSocket()?.id!);
+        var currentSession = await this.sessionService.joinSession(args.sessionId, args.name, this.getSocket()?.id!);
 
         // TODO: Send update state event to user.
-        this.websocketServer.emit(WebsocketServerEvent.UpdateState, { 'session_id': newSession.id });
+        this.getSocket()?.emit(WebsocketServerEvent.UpdateState.eventName, currentSession);
     };
 }
 

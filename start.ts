@@ -10,6 +10,7 @@ import winston from "winston";
 import { WinstonLogger } from "./src/logger/logger";
 
 import * as jwt from 'socketio-jwt-auth';
+import { JoinSessionHandler } from "./src/websocket_server/handlers/join_session_handler";
 
 
 const port: number = Number(process.env.PORT) || 8082;
@@ -51,7 +52,10 @@ const ioServer: Server = new Server(httpServer);
 const sessionService: SessionService = new SessionService(redisClient);
 
 const server: WebsocketServer = new WebsocketServer(ioServer, logger);
-const handlers = [ new NewSessionHandler(sessionService, server, logger)];
+const handlers = [ 
+  new NewSessionHandler(sessionService, server, logger),
+  new JoinSessionHandler(sessionService, server, logger)
+];
 server.init(handlers);
 
 httpServer.listen(port, () => console.log(`Express App running on port ${port}`));
